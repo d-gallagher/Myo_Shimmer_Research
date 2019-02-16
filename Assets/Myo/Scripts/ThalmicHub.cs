@@ -14,7 +14,8 @@ using LockingPolicy = Thalmic.Myo.LockingPolicy;
 public class ThalmicHub : MonoBehaviour
 {
     // The single instance of ThalmicHub. Set during Awake.
-    public static ThalmicHub instance {
+    public static ThalmicHub instance
+    {
         get { return _instance; }
     }
 
@@ -33,18 +34,22 @@ public class ThalmicHub : MonoBehaviour
     // True if and only if the hub initialized successfully; typically this is set during Awake, but it can also be
     // set by calling ResetHub() explicitly. The typical reason for initialization to fail is that Myo Connect is not
     // running.
-    public bool hubInitialized {
+    public bool hubInitialized
+    {
         get { return _hub != null; }
     }
 
     // Reset the hub. This function is typically used if initialization failed to attempt to initialize again (e.g.
     // after asking the user to ensure that Myo Connect is running).
-    public bool ResetHub() {
-        if (_hub != null) {
-            _hub.Dispose ();
+    public bool ResetHub()
+    {
+        if (_hub != null)
+        {
+            _hub.Dispose();
             _hub = null;
 
-            foreach (ThalmicMyo myo in _myos) {
+            foreach (ThalmicMyo myo in _myos)
+            {
                 myo.internalMyo = null;
             }
         }
@@ -62,18 +67,21 @@ public class ThalmicHub : MonoBehaviour
 #endif
     }
 
-    void Awake ()
+    void Awake()
     {
         // Ensure that there is only one ThalmicHub.
-        if (_instance != null) {
+        if (_instance != null)
+        {
 #if UNITY_EDITOR
             EditorUtility.DisplayDialog("Can only have one ThalmicHub",
                                         "Your scene contains more than one ThalmicHub. Remove all but one ThalmicHub.",
                                         "OK");
 #endif
-            Destroy (this.gameObject);
+            Destroy(this.gameObject);
             return;
-        } else {
+        }
+        else
+        {
             _instance = this;
         }
 
@@ -81,19 +89,22 @@ public class ThalmicHub : MonoBehaviour
         // switching scenes.
         DontDestroyOnLoad(this);
 
-        for (int i = 0; i < transform.childCount; ++i) {
-            Transform child = transform.GetChild (i);
+        for (int i = 0; i < transform.childCount; ++i)
+        {
+            Transform child = transform.GetChild(i);
 
-            var myo = child.gameObject.GetComponent<ThalmicMyo> ();
-            if (myo != null) {
+            var myo = child.gameObject.GetComponent<ThalmicMyo>();
+            if (myo != null)
+            {
                 _myos.Add(myo);
             }
         }
 
-        if (_myos.Count < 1) {
+        if (_myos.Count < 1)
+        {
             string errorMessage = "The ThalmicHub's GameObject must have at least one child with a ThalmicMyo component.";
 #if UNITY_EDITOR
-            EditorUtility.DisplayDialog ("Thalmic Hub has no Myo children", errorMessage, "OK");
+            EditorUtility.DisplayDialog("Thalmic Hub has no Myo children", errorMessage, "OK");
 #else
             throw new UnityException (errorMessage);
 #endif
@@ -113,38 +124,45 @@ public class ThalmicHub : MonoBehaviour
             createHub ();
         }));
 #else
-        createHub ();
+        createHub();
 #endif
     }
 
-    private bool createHub () {
-        try {
-            _hub = new Thalmic.Myo.Hub (applicationIdentifier, hub_MyoPaired);
+    private bool createHub()
+    {
+        try
+        {
+            _hub = new Thalmic.Myo.Hub(applicationIdentifier, hub_MyoPaired);
 
-            _hub.SetLockingPolicy (lockingPolicy);
-        } catch (System.Exception) {
-            Debug.Log ("ThalmicHub failed to initialize.");
+            _hub.SetLockingPolicy(lockingPolicy);
+        }
+        catch (System.Exception)
+        {
+            Debug.Log("ThalmicHub failed to initialize.");
             return false;
         }
         return true;
     }
 
-    void OnApplicationQuit ()
+    void OnApplicationQuit()
     {
-        if (_hub != null) {
-            _hub.Dispose ();
+        if (_hub != null)
+        {
+            _hub.Dispose();
             _hub = null;
         }
     }
 
-    void Update ()
+    void Update()
     {
     }
 
-    void hub_MyoPaired (object sender, Thalmic.Myo.MyoEventArgs e)
+    void hub_MyoPaired(object sender, Thalmic.Myo.MyoEventArgs e)
     {
-        foreach (ThalmicMyo myo in _myos) {
-            if (myo.internalMyo == null) {
+        foreach (ThalmicMyo myo in _myos)
+        {
+            if (myo.internalMyo == null)
+            {
                 myo.internalMyo = e.Myo;
                 break;
             }
