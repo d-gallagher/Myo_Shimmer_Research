@@ -5,6 +5,7 @@ using XDirection = Thalmic.Myo.XDirection;
 using VibrationType = Thalmic.Myo.VibrationType;
 using Pose = Thalmic.Myo.Pose;
 using UnlockType = Thalmic.Myo.UnlockType;
+using ShimmerRT.models;
 
 namespace Assets._Scripts.Shimmer
 {
@@ -13,6 +14,8 @@ namespace Assets._Scripts.Shimmer
     {
         // True if and only if Myo has detected that it is on an arm.
         public bool armSynced;
+
+        public Shimmer3DModel shimmerModel;
 
         // Returns true if and only if Myo is unlocked.
         //public bool unlocked;
@@ -79,17 +82,35 @@ namespace Assets._Scripts.Shimmer
                 armSynced = _myoArmSynced;
                 //arm = _myoArm;
                 xDirection = _myoXDirection;
-                if (_myoQuaternion != null)
+                if (shimmerModel != null)
                 {
-                    transform.localRotation = new Quaternion(_myoQuaternion.Y, _myoQuaternion.Z, -_myoQuaternion.X, -_myoQuaternion.W);
+                    // for myo this was: y, z, -x, -w
+                    transform.localRotation = new Quaternion(
+                        (float)shimmerModel.Quaternion_1_CAL,   // y
+                        (float)shimmerModel.Quaternion_2_CAL,   // z
+                        -(float)shimmerModel.Quaternion_0_CAL,   // -x
+                        -(float)shimmerModel.Quaternion_3_CAL  // -w
+                        );
                 }
-                if (_myoAccelerometer != null)
+                if (shimmerModel != null)
                 {
-                    accelerometer = new Vector3(_myoAccelerometer.Y, _myoAccelerometer.Z, -_myoAccelerometer.X);
+                    // for myo this was: y, z, -x
+                    accelerometer = new Vector3(
+                        (float)shimmerModel.Low_Noise_Accelerometer_Y_CAL,    // y
+                        (float)shimmerModel.Low_Noise_Accelerometer_Z_CAL,    // z
+                        -(float)shimmerModel.Low_Noise_Accelerometer_X_CAL    // -x
+                        );
                 }
-                if (_myoGyroscope != null)
+
+
+                if (shimmerModel != null)
                 {
-                    gyroscope = new Vector3(_myoGyroscope.Y, _myoGyroscope.Z, -_myoGyroscope.X);
+                    // for myo this was: y, z, -x
+                    gyroscope = new Vector3(
+                        (float)shimmerModel.Gyroscope_Y_CAL,    // y
+                        (float)shimmerModel.Gyroscope_Z_CAL,    //z
+                        -(float)shimmerModel.Gyroscope_X_CAL    // -x
+                        );
                 }
                 //pose = _myoPose;
                 //unlocked = _myoUnlocked;
