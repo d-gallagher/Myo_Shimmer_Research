@@ -6,6 +6,7 @@ using ShimmerAPI;
 using UnityEngine.UI;
 using Assets._Scripts.Shimmer;
 using System;
+using ShimmerRT;
 
 public class ShimmerFeedManager : MonoBehaviour, IFeedable
 {
@@ -132,6 +133,11 @@ public class ShimmerFeedManager : MonoBehaviour, IFeedable
 
         txtOutput.text += "\nStream Stopped";
         txtOutput.text += "\nDisconnected";
+    }
+
+    public void UpdateFeed(Shimmer3DModel model)
+    {
+        throw new NotImplementedException();
     }
     #endregion
 }
