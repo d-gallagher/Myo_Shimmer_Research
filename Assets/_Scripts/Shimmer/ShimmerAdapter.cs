@@ -17,26 +17,26 @@ namespace Assets._Scripts.Shimmer
                     -(float)model.Quaternion_3_CAL  // -w
                     );
             }
-            if (model != null)
-            {
-                // for myo this was: y, z, -x
-                accelerometer = new Vector3(
-                    (float)model.Low_Noise_Accelerometer_Y_CAL,    // y
-                    (float)model.Low_Noise_Accelerometer_Z_CAL,    // z
-                    -(float)model.Low_Noise_Accelerometer_X_CAL    // -x
-                    );
-            }
+            //if (model != null)
+            //{
+            //    // for myo this was: y, z, -x
+            //    accelerometer = new Vector3(
+            //        (float)model.Low_Noise_Accelerometer_Y_CAL,    // y
+            //        (float)model.Low_Noise_Accelerometer_Z_CAL,    // z
+            //        -(float)model.Low_Noise_Accelerometer_X_CAL    // -x
+            //        );
+            //}
 
 
-            if (model != null)
-            {
-                // for myo this was: y, z, -x
-                gyroscope = new Vector3(
-                    (float)model.Gyroscope_Y_CAL,    // y
-                    (float)model.Gyroscope_Z_CAL,    //z
-                    -(float)model.Gyroscope_X_CAL    // -x
-                    );
-            }
+            //if (model != null)
+            //{
+            //    // for myo this was: y, z, -x
+            //    gyroscope = new Vector3(
+            //        (float)model.Gyroscope_Y_CAL,    // y
+            //        (float)model.Gyroscope_Z_CAL,    //z
+            //        -(float)model.Gyroscope_X_CAL    // -x
+            //        );
+            //}
         }
 
         //public static void Move(Transform transform, Shimmer3DModel data)

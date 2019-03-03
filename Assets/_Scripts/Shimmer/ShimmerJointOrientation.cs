@@ -5,7 +5,6 @@ using LockingPolicy = Thalmic.Myo.LockingPolicy;
 using Pose = Thalmic.Myo.Pose;
 using UnlockType = Thalmic.Myo.UnlockType;
 using VibrationType = Thalmic.Myo.VibrationType;
-using System.Collections.Generic;
 
 // Orient the object to match that of the Myo armband.
 // Compensate for initial yaw (orientation about the gravity vector) and roll (orientation about
@@ -15,7 +14,7 @@ public class ShimmerJointOrientation : MonoBehaviour
 {
     // Myo game object to connect with.
     // This object must have a ThalmicMyo script attached.
-    public GameObject shimmer = null;
+    public GameObject shimmerDevice = null;
 
     // A rotation that compensates for the Myo armband's orientation parallel to the ground, i.e. yaw.
     // Once set, the direction the Myo armband is facing becomes "forward" within the program.
@@ -29,24 +28,20 @@ public class ShimmerJointOrientation : MonoBehaviour
     // The pose from the last update. This is used to determine if the pose has changed
     // so that actions are only performed upon making them rather than every frame during
     // which they are active.
-    private Pose _lastPose = Pose.Unknown;
-
-    private Queue<List<double>> _queue;
-
-    void Start()
-    {
-        // Access the ThalmicMyo component attached to the Myo object.
-        ShimmerFeedManager shimmerFeed = shimmer.GetComponent<ShimmerFeedManager>();
-
-        _queue = shimmerFeed._queue;
-    }
+    //private Pose _lastPose = Pose.Unknown;
 
     // Update is called once per frame.
     void Update()
     {
+        // Access the ThalmicMyo component attached to the Myo object.
+        //ThalmicMyo thalmicMyo = shimmerDevice.GetComponent<ThalmicMyo>();
 
-        // Update references when the pose becomes fingers spread or the q key is pressed.
-        bool updateReference = false;
+        ShimmerFeedManager shimmerFeed = shimmerDevice.GetComponent<ShimmerFeedManager>();
+
+        #region Myo Pose - may need to use latter part of this code - Update References
+
+        //// Update references when the pose becomes fingers spread or the q key is pressed.
+        //bool updateReference = false;
         //if (thalmicMyo.pose != _lastPose)
         //{
         //    _lastPose = thalmicMyo.pose;
@@ -64,52 +59,54 @@ public class ShimmerJointOrientation : MonoBehaviour
         //    updateReference = true;
         //}
 
-        // Update references. This anchors the joint on-screen such that it faces forward away
-        // from the viewer when the Myo armband is oriented the way it is when these references are taken.
-        if (updateReference)
-        {
-            // _antiYaw represents a rotation of the Myo armband about the Y axis (up) which aligns the forward
-            // vector of the rotation with Z = 1 when the wearer's arm is pointing in the reference direction.
-            _antiYaw = Quaternion.FromToRotation(
-                new Vector3(shimmer.transform.forward.x, 0, shimmer.transform.forward.z),
-                new Vector3(0, 0, 1)
-            );
+        //// Update references. This anchors the joint on-screen such that it faces forward away
+        //// from the viewer when the Myo armband is oriented the way it is when these references are taken.
+        //if (updateReference)
+        //{
+        //    // _antiYaw represents a rotation of the Myo armband about the Y axis (up) which aligns the forward
+        //    // vector of the rotation with Z = 1 when the wearer's arm is pointing in the reference direction.
+        //    _antiYaw = Quaternion.FromToRotation(
+        //        new Vector3(myo.transform.forward.x, 0, myo.transform.forward.z),
+        //        new Vector3(0, 0, 1)
+        //    );
 
-            // _referenceRoll represents how many degrees the Myo armband is rotated clockwise
-            // about its forward axis (when looking down the wearer's arm towards their hand) from the reference zero
-            // roll direction. This direction is calculated and explained below. When this reference is
-            // taken, the joint will be rotated about its forward axis such that it faces upwards when
-            // the roll value matches the reference.
-            Vector3 referenceZeroRoll = computeZeroRollVector(shimmer.transform.forward);
-            _referenceRoll = rollFromZero(referenceZeroRoll, shimmer.transform.forward, shimmer.transform.up);
-        }
+        //    // _referenceRoll represents how many degrees the Myo armband is rotated clockwise
+        //    // about its forward axis (when looking down the wearer's arm towards their hand) from the reference zero
+        //    // roll direction. This direction is calculated and explained below. When this reference is
+        //    // taken, the joint will be rotated about its forward axis such that it faces upwards when
+        //    // the roll value matches the reference.
+        //    Vector3 referenceZeroRoll = computeZeroRollVector(myo.transform.forward);
+        //    _referenceRoll = rollFromZero(referenceZeroRoll, myo.transform.forward, myo.transform.up);
+        //}
+
+        #endregion
 
         // Current zero roll vector and roll value.
-        Vector3 zeroRoll = computeZeroRollVector(shimmer.transform.forward);
-        float roll = rollFromZero(zeroRoll, shimmer.transform.forward, shimmer.transform.up);
+        Vector3 zeroRoll = computeZeroRollVector(shimmerDevice.transform.forward);
+        float roll = rollFromZero(zeroRoll, shimmerDevice.transform.forward, shimmerDevice.transform.up);
 
         // The relative roll is simply how much the current roll has changed relative to the reference roll.
         // adjustAngle simply keeps the resultant value within -180 to 180 degrees.
         float relativeRoll = normalizeAngle(roll - _referenceRoll);
 
         // antiRoll represents a rotation about the myo Armband's forward axis adjusting for reference roll.
-        Quaternion antiRoll = Quaternion.AngleAxis(relativeRoll, shimmer.transform.forward);
+        Quaternion antiRoll = Quaternion.AngleAxis(relativeRoll, shimmerDevice.transform.forward);
 
         // Here the anti-roll and yaw rotations are applied to the myo Armband's forward direction to yield
         // the orientation of the joint.
-        transform.rotation = _antiYaw * antiRoll * Quaternion.LookRotation(shimmer.transform.forward);
+        transform.rotation = _antiYaw * antiRoll * Quaternion.LookRotation(shimmerDevice.transform.forward);
 
         // The above calculations were done assuming the Myo armbands's +x direction, in its own coordinate system,
         // was facing toward the wearer's elbow. If the Myo armband is worn with its +x direction facing the other way,
         // the rotation needs to be updated to compensate.
-        //if (thalmicMyo.xDirection == Thalmic.Myo.XDirection.TowardWrist)
+        //if (shimmerFeed.xDirection == Thalmic.Myo.XDirection.TowardWrist)
         //{
-        //    // Mirror the rotation around the XZ plane in Unity's coordinate system (XY plane in Myo's coordinate
-        //    // system). This makes the rotation reflect the arm's orientation, rather than that of the Myo armband.
-        //    transform.rotation = new Quaternion(transform.localRotation.x,
-        //                                        -transform.localRotation.y,
-        //                                        transform.localRotation.z,
-        //                                        -transform.localRotation.w);
+            // Mirror the rotation around the XZ plane in Unity's coordinate system (XY plane in Myo's coordinate
+            // system). This makes the rotation reflect the arm's orientation, rather than that of the Myo armband.
+            transform.rotation = new Quaternion(transform.localRotation.x,
+                                                -transform.localRotation.y,
+                                                transform.localRotation.z,
+                                                -transform.localRotation.w);
         //}
     }
 
@@ -142,8 +139,8 @@ public class ShimmerJointOrientation : MonoBehaviour
     Vector3 computeZeroRollVector(Vector3 forward)
     {
         Vector3 antigravity = Vector3.up;
-        Vector3 m = Vector3.Cross(shimmer.transform.forward, antigravity);
-        Vector3 roll = Vector3.Cross(m, shimmer.transform.forward);
+        Vector3 m = Vector3.Cross(shimmerDevice.transform.forward, antigravity);
+        Vector3 roll = Vector3.Cross(m, shimmerDevice.transform.forward);
 
         return roll.normalized;
     }
