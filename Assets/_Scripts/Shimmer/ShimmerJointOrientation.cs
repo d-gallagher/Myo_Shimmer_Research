@@ -69,10 +69,11 @@ public class ShimmerJointOrientation : MonoBehaviour
     {
 
         transform.localRotation = new Quaternion(
-            (float)s.Quaternion_1_CAL,
-            (float)s.Quaternion_2_CAL,
+            -(float)s.Quaternion_2_CAL,
             -(float)s.Quaternion_0_CAL,
+            (float)s.Quaternion_1_CAL,
             -(float)s.Quaternion_3_CAL);
+
 
         accelerometer = new Vector3(
             (float)s.Low_Noise_Accelerometer_Y_CAL,
