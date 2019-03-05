@@ -2,6 +2,9 @@
 
 using LockingPolicy = Thalmic.Myo.LockingPolicy;
 using UnlockType = Thalmic.Myo.UnlockType;
+
+//using LockingPolicy = Thalmic.Myo.LockingPolicy;
+//using UnlockType = Thalmic.Myo.UnlockType;
 using ShimmerRT.models;
 using UnityEngine.UI;
 
@@ -28,6 +31,12 @@ public class ShimmerJointOrientationDev : MonoBehaviour
     private Vector3 gyroscope;
 
     public Button btnResetTransform;
+
+    public Button btnSetLockRotation;
+    public Button btnSetLockPosition;
+
+    public bool LockRotation { get; private set; }
+    public bool LockPosition { get; private set; }
 
     void Start()
     {
@@ -84,6 +93,36 @@ public class ShimmerJointOrientationDev : MonoBehaviour
             (float)s.Low_Noise_Accelerometer_Y_CAL,
             (float)s.Low_Noise_Accelerometer_Z_CAL,
             -(float)s.Low_Noise_Accelerometer_X_CAL);
+
+        if (!LockRotation)
+            transform.localRotation = new Quaternion(
+                -(float)s.Quaternion_2_CAL,
+                -(float)s.Quaternion_0_CAL,
+                (float)s.Quaternion_1_CAL,
+                -(float)s.Quaternion_3_CAL);
+
+        //// Original code with Myo axes
+        //accelerometer = new Vector3(
+        //(float)s.Low_Noise_Accelerometer_Y_CAL,
+        //(float)s.Low_Noise_Accelerometer_Z_CAL,
+        //-(float)s.Low_Noise_Accelerometer_X_CAL);
+
+        if (!LockPosition)
+            accelerometer = new Vector3(
+                (float)s.Low_Noise_Accelerometer_Z_CAL,
+                (float)s.Low_Noise_Accelerometer_X_CAL,
+                -(float)s.Low_Noise_Accelerometer_Z_CAL
+                );
+
+        int threshold = 5;
+        if (accelerometer.x < threshold)
+            accelerometer.x = 0;
+        if (accelerometer.y < threshold)
+            accelerometer.y = 0;
+        if (accelerometer.z < threshold)
+            accelerometer.z = 0;
+
+        transform.position = transform.position += (accelerometer / 100);
 
         gyroscope = new Vector3(
             (float)s.Gyroscope_Y_CAL,
@@ -153,4 +192,19 @@ public class ShimmerJointOrientationDev : MonoBehaviour
 
         myo.NotifyUserAction();
     }
+
+    //// Extend the unlock if ThalmcHub's locking policy is standard, and notifies the given myo that a user action was
+    //// recognized.
+    //void ExtendUnlockAndNotifyUserAction(ThalmicMyo myo)
+    //{
+    //    ThalmicHub hub = ThalmicHub.instance;
+
+    //    if (hub.lockingPolicy == LockingPolicy.Standard)
+    //    {
+    //        myo.Unlock(UnlockType.Timed);
+    //    }
+
+    //    myo.NotifyUserAction();
+    //}
+
 }

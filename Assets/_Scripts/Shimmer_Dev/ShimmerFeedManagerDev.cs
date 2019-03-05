@@ -15,7 +15,8 @@ public class ShimmerFeedManagerDev : MonoBehaviour, IFeedable
 
     // data structure used to shared data between this Shimmer 
     // and ShimmerJointOrientation
-    public Queue<Shimmer3DModel> Queue { get; set; }
+
+    public Queue<Shimmer3DModel> Queue { get; private set; }
 
     // True if and only if this Shimmer has paired successfully, at which point it will 
     // provide data and a connection with it will be maintained when possible.
