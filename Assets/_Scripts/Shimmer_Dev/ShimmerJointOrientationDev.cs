@@ -3,6 +3,7 @@
 using LockingPolicy = Thalmic.Myo.LockingPolicy;
 using UnlockType = Thalmic.Myo.UnlockType;
 using ShimmerRT.models;
+using UnityEngine.UI;
 
 // Orient the object to match that of the Myo armband.
 // Compensate for initial yaw (orientation about the gravity vector) and roll (orientation about
@@ -26,8 +27,12 @@ public class ShimmerJointOrientationDev : MonoBehaviour
     private Vector3 accelerometer;
     private Vector3 gyroscope;
 
+    public Button btnResetTransform;
+
     void Start()
     {
+        btnResetTransform.onClick.AddListener(ResetTransform);
+
         // get the script from the ShimmerDevice object
         shimmerFeed = shimmerDevice.GetComponent<ShimmerFeedManagerDev>();
         ResetTransform();
