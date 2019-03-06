@@ -40,6 +40,8 @@ public class ShimmerJointOrientationDev : MonoBehaviour
 
     void Start()
     {
+        LockPosition = true;
+
         btnResetTransform.onClick.AddListener(ResetTransform);
 
         // get the script from the ShimmerDevice object
@@ -108,21 +110,17 @@ public class ShimmerJointOrientationDev : MonoBehaviour
         //-(float)s.Low_Noise_Accelerometer_X_CAL);
 
         if (!LockPosition)
-            accelerometer = new Vector3(
-                (float)s.Low_Noise_Accelerometer_Z_CAL,
-                (float)s.Low_Noise_Accelerometer_X_CAL,
-                -(float)s.Low_Noise_Accelerometer_Z_CAL
-                );
+        {
+            int threshold = 5;
+            if (accelerometer.x < threshold)
+                accelerometer.x = 0;
+            if (accelerometer.y < threshold)
+                accelerometer.y = 0;
+            if (accelerometer.z < threshold)
+                accelerometer.z = 0;
 
-        int threshold = 5;
-        if (accelerometer.x < threshold)
-            accelerometer.x = 0;
-        if (accelerometer.y < threshold)
-            accelerometer.y = 0;
-        if (accelerometer.z < threshold)
-            accelerometer.z = 0;
-
-        transform.position = transform.position += (accelerometer / 100);
+            transform.position = transform.position += (accelerometer / 100);
+        }
 
         gyroscope = new Vector3(
             (float)s.Gyroscope_Y_CAL,
