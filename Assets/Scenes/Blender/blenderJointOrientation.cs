@@ -75,6 +75,14 @@ public class blenderJointOrientation : MonoBehaviour
             -(float)s.Quaternion_3_CAL);
 
 
+        //https://docs.unity3d.com/ScriptReference/Quaternion.Lerp.html not working .. :/ Lerp is not recognised
+        //transform.localRotation = new Quaternion.Lerp(transform.localRotation, 
+        //                                                new Quaternion(-(float)s.Quaternion_2_CAL,
+        //                                                -(float)s.Quaternion_0_CAL,
+        //                                                (float)s.Quaternion_1_CAL,
+        //                                                -(float)s.Quaternion_3_CAL), Time.deltaTime * 15.0f);
+
+
         accelerometer = new Vector3(
             (float)s.Low_Noise_Accelerometer_Y_CAL,
             (float)s.Low_Noise_Accelerometer_Z_CAL,
