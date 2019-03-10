@@ -26,11 +26,14 @@ public class blenderJointOrientation : MonoBehaviour
     private Vector3 accelerometer;
     private Vector3 gyroscope;
 
+    //rotation offset to manupulate rotation of model in game
+    public Vector3 rotationOffset = new Vector3 { x = 0, y = -90, z = 0 };
+
     void Start()
     {
         // get the script from the ShimmerDevice object
         shimmerFeed = shimmerDevice.GetComponent<ShimmerFeedManager>();
-        ResetTransform();
+        //ResetTransform();
     }
 
     private void Update()
@@ -67,22 +70,58 @@ public class blenderJointOrientation : MonoBehaviour
 
     private void UpdateTransform(Shimmer3DModel s)
     {
+        //Values Ref from Shimmer Capture output csv
+        //Shimmer Quat 0 is w
+        //Shimmer Quat 1 is x
+        //Shimmer Quat 2 is y
+        //Shimmer Quat 3 is z
 
-        transform.localRotation = new Quaternion(
-            -(float)s.Quaternion_2_CAL,
-            -(float)s.Quaternion_0_CAL,
-            (float)s.Quaternion_1_CAL,
-            -(float)s.Quaternion_3_CAL);
+
+        //MYO_Conf - copy of quaternion set up
+        //Quaternion newRotation = new Quaternion(
+        //    (float)s.Quaternion_1_CAL,
+        //    (float)s.Quaternion_2_CAL,
+        //    -(float)s.Quaternion_0_CAL,
+        //    -(float)s.Quaternion_3_CAL);
+
+        //ShimmerOnAStick Conf orig - from original scene/script
+        //Quaternion newRotation = new Quaternion(
+        //    -(float)s.Quaternion_2_CAL,//x
+        //    -(float)s.Quaternion_0_CAL,//y
+        //    (float)s.Quaternion_1_CAL,//z
+        //    -(float)s.Quaternion_3_CAL);
+
+        //ShimmerOnAStick Conf using w=o, x=1, y=2, z=3
+        Quaternion newRotation = new Quaternion(
+            -(float)s.Quaternion_1_CAL,//x
+            -(float)s.Quaternion_2_CAL,//y
+            (float)s.Quaternion_3_CAL,//z
+            -(float)s.Quaternion_0_CAL);
+
+        //ShimmerOnAStick Conf axes changed from orig after testing in Unity
+        //Quaternion newRotation = new Quaternion(
+        //    -(float)s.Quaternion_0_CAL,//x
+        //    -(float)s.Quaternion_2_CAL,//y
+        //    -(float)s.Quaternion_1_CAL,//z
+        //    -(float)s.Quaternion_3_CAL);
+
+        //test rotation w/Euler Angles
+        //Quaternion newRotation = new Quaternion(
+        //    (float)s.Axis_Angle_X_CAL,//x
+        //    (float)s.Axis_Angle_Y_CAL,//y
+        //    (float)s.Axis_Angle_Z_CAL,//z
+        //    (float)s.Axis_Angle_A_CAL);//w
 
 
         //https://docs.unity3d.com/ScriptReference/Quaternion.Lerp.html not working .. :/ Lerp is not recognised
-        //transform.localRotation = new Quaternion.Lerp(transform.localRotation, 
-        //                                                new Quaternion(-(float)s.Quaternion_2_CAL,
-        //                                                -(float)s.Quaternion_0_CAL,
-        //                                                (float)s.Quaternion_1_CAL,
-        //                                                -(float)s.Quaternion_3_CAL), Time.deltaTime * 15.0f);
+        //transform.localRotation =  Quaternion.Lerp(transform.localRotation,
+        //                                                newRotation, Time.deltaTime * 15.0f);
 
-
+        transform.localRotation = newRotation;
+        //testing Euler and Gyro - not usable!!
+        //transform.eulerAngles = new Vector3((float)s.Axis_Angle_X_CAL, (float)s.Axis_Angle_Y_CAL, (float)s.Axis_Angle_Z_CAL);
+        //transform.eulerAngles = new Vector3((float)s.Gyroscope_X_CAL, (float)s.Gyroscope_Y_CAL, (float)s.Gyroscope_Z_CAL);
+        
         accelerometer = new Vector3(
             (float)s.Low_Noise_Accelerometer_Y_CAL,
             (float)s.Low_Noise_Accelerometer_Z_CAL,
@@ -92,6 +131,8 @@ public class blenderJointOrientation : MonoBehaviour
             (float)s.Gyroscope_Y_CAL,
             (float)s.Gyroscope_Z_CAL,
             -(float)s.Gyroscope_X_CAL);
+
+        // transform.parent.transform.eulerAngles = rotationOffset;
     }
 
     // Compute the angle of rotation clockwise about the forward axis relative to the provided zero roll direction.
