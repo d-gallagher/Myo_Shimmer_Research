@@ -132,7 +132,7 @@ public class blenderJointOrientation : MonoBehaviour
             (float)s.Gyroscope_Z_CAL,
             -(float)s.Gyroscope_X_CAL);
 
-        // transform.parent.transform.eulerAngles = rotationOffset;
+        transform.parent.transform.eulerAngles = rotationOffset;
     }
 
     // Compute the angle of rotation clockwise about the forward axis relative to the provided zero roll direction.
