@@ -55,9 +55,14 @@ public class ShimmerFeedManager : MonoBehaviour, IFeedable
         {
             // put this data as a model on the shared Queue
             s = Shimmer3DModel.GetModelFromArray(data.ToArray());
+
+           
+
             Queue.Enqueue(s);
         }
     }
+    
+
     #endregion
 
     #region Shimmer device methods

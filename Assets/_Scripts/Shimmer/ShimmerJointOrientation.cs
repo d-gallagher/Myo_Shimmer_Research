@@ -3,6 +3,8 @@
 using LockingPolicy = Thalmic.Myo.LockingPolicy;
 using UnlockType = Thalmic.Myo.UnlockType;
 using ShimmerRT.models;
+using UnityEngine.UI;
+using System.Collections.Generic;
 
 // Orient the object to match that of the Myo armband.
 // Compensate for initial yaw (orientation about the gravity vector) and roll (orientation about
@@ -26,6 +28,14 @@ public class ShimmerJointOrientation : MonoBehaviour
     private Vector3 accelerometer;
     private Vector3 gyroscope;
 
+    private Shimmer3DModel lastShimmerModel = null;
+
+    public Text txtImpact;
+
+    public float impactThreshold = 1.0f;
+    public float isMovingThreshold = 1.0f;
+    Dictionary<Vector3, Vector3> snapshots = new Dictionary<Vector3, Vector3>();
+
     void Start()
     {
         // get the script from the ShimmerDevice object
@@ -37,8 +47,83 @@ public class ShimmerJointOrientation : MonoBehaviour
     {
         // if data is available, use it
         if (shimmerFeed.Queue.Count > 0)
-            UpdateTransform(shimmerFeed.Queue.Dequeue());
+        {
+            var s = shimmerFeed.Queue.Dequeue();
+            // see if there was an 'impact' between this data and the last received data
+            if (lastShimmerModel != null)
+            {
+                Debug.Log("Checking Impact");
+                if (CheckImpact(s))
+                {
+                    txtImpact.text = "--IMPACT--" + Time.time;
+                }
+            }
+            UpdateTransform(s);
+            lastShimmerModel = s;
+        }
     }
+
+
+    #region == ImpactCheck ==
+
+    private bool CheckImpact(Shimmer3DModel s)
+    {
+
+        float dX = Mathf.Abs((float)(lastShimmerModel.Low_Noise_Accelerometer_X_CAL - s.Low_Noise_Accelerometer_X_CAL));
+        float dY = Mathf.Abs((float)(lastShimmerModel.Low_Noise_Accelerometer_Y_CAL - s.Low_Noise_Accelerometer_Y_CAL));
+        float dZ = Mathf.Abs((float)(lastShimmerModel.Low_Noise_Accelerometer_Z_CAL - s.Low_Noise_Accelerometer_Z_CAL));
+
+        Debug.Log(dX);
+        Debug.Log(dY);
+        Debug.Log(dZ);
+
+        if (dX > impactThreshold)
+        {
+            return true;
+        }
+        if (dY > impactThreshold)
+        {
+            return true;
+        }
+        if (dZ > impactThreshold)
+        {
+            return true;
+        }
+        return false;
+    }
+    #endregion
+
+    #region == Movement Snapshots ==
+    private bool CheckMoving(Shimmer3DModel s)
+    {
+
+        float dX = Mathf.Abs((float)(lastShimmerModel.Low_Noise_Accelerometer_X_CAL - s.Low_Noise_Accelerometer_X_CAL));
+        float dY = Mathf.Abs((float)(lastShimmerModel.Low_Noise_Accelerometer_Y_CAL - s.Low_Noise_Accelerometer_Y_CAL));
+        float dZ = Mathf.Abs((float)(lastShimmerModel.Low_Noise_Accelerometer_Z_CAL - s.Low_Noise_Accelerometer_Z_CAL));
+
+        //if ((x != nx && abs(x - nx) > threshold) || (y != ny && abs(y - ny) > threshold) || (z != nz && abs(z - nz) > threshold))
+        //{
+        //    onAwake(x, y, z);
+        //}
+
+        if (dX > isMovingThreshold || dY > isMovingThreshold || dZ > isMovingThreshold)
+        {
+            Vector3 accel = new Vector3(dX, dY, dZ);
+            Vector3 gyro = new Vector3((float)s.Gyroscope_X_CAL, (float)s.Gyroscope_Y_CAL, (float)s.Gyroscope_Z_CAL);
+            IsMoving(accel, gyro);
+            return true;
+        }
+     
+
+        return false;
+    }
+
+    //Add snapshots of model accel and rotation to list
+    private void IsMoving(Vector3 accel, Vector3 gyro)
+    {
+        snapshots.Add(accel, gyro);
+    }
+    #endregion
 
     void ResetTransform()
     {
@@ -76,9 +161,10 @@ public class ShimmerJointOrientation : MonoBehaviour
 
 
         accelerometer = new Vector3(
+            (float)s.Low_Noise_Accelerometer_X_CAL,
             (float)s.Low_Noise_Accelerometer_Y_CAL,
-            (float)s.Low_Noise_Accelerometer_Z_CAL,
-            -(float)s.Low_Noise_Accelerometer_X_CAL);
+            (float)s.Low_Noise_Accelerometer_Z_CAL);
+        Debug.Log("LN Acc X: " + accelerometer.x + "LN Acc Y: " + accelerometer.y + "LN Acc Z: " + accelerometer.z);
 
         gyroscope = new Vector3(
             (float)s.Gyroscope_Y_CAL,
@@ -86,6 +172,7 @@ public class ShimmerJointOrientation : MonoBehaviour
             -(float)s.Gyroscope_X_CAL);
     }
 
+    #region == Myo Code ==
     // Compute the angle of rotation clockwise about the forward axis relative to the provided zero roll direction.
     // As the armband is rotated about the forward axis this value will change, regardless of which way the
     // forward vector of the Myo is pointing. The returned value will be between -180 and 180 degrees.
@@ -148,4 +235,5 @@ public class ShimmerJointOrientation : MonoBehaviour
 
         myo.NotifyUserAction();
     }
+    #endregion
 }
