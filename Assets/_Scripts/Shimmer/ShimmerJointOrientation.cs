@@ -34,13 +34,16 @@ public class ShimmerJointOrientation : MonoBehaviour
 
     public float impactThreshold = 1.0f;
     public float isMovingThreshold = 1.0f;
-    Dictionary<Vector3, Vector3> snapshots = new Dictionary<Vector3, Vector3>();
+    public Button btnSnapshot;
+    //name value for accel + gyro from running rugby guy
+    Dictionary<string, Vector3> snapshots = new Dictionary<string, Vector3>();
 
     void Start()
     {
         // get the script from the ShimmerDevice object
         shimmerFeed = shimmerDevice.GetComponent<ShimmerFeedManager>();
         ResetTransform();
+        btnSnapshot.onClick.AddListener(PrintSnaps);
     }
 
     private void Update()
@@ -55,7 +58,13 @@ public class ShimmerJointOrientation : MonoBehaviour
                 Debug.Log("Checking Impact");
                 if (CheckImpact(s))
                 {
-                    txtImpact.text = "--IMPACT--" + Time.time;
+                    txtImpact.text = "--IMPACT--\n" + Time.time;
+                }
+
+                if (CheckMoving(s))
+                {
+                    txtImpact.text = "--IsMoving--\n" + "LN Acc X: " + accelerometer.x + "\nLN Acc Y: " + accelerometer.y + "\nLN Acc Z: " + accelerometer.z;
+                    
                 }
             }
             UpdateTransform(s);
@@ -121,7 +130,19 @@ public class ShimmerJointOrientation : MonoBehaviour
     //Add snapshots of model accel and rotation to list
     private void IsMoving(Vector3 accel, Vector3 gyro)
     {
-        snapshots.Add(accel, gyro);
+        //add string key then value
+        snapshots.Add("Ac: " + Time.time, accel);
+        snapshots.Add("Gy: " + Time.time, gyro);
+    }
+
+    private void PrintSnaps()
+    {
+        Debug.Log("Snapshot Dict Size: "+snapshots.Count);
+        foreach (KeyValuePair<string, Vector3> kvp in snapshots)
+        {
+            Debug.Log(string.Format("PrintSnap: Key = {0}, Value = {1}", kvp.Key, kvp.Value));
+        }
+
     }
     #endregion
 
@@ -164,7 +185,7 @@ public class ShimmerJointOrientation : MonoBehaviour
             (float)s.Low_Noise_Accelerometer_X_CAL,
             (float)s.Low_Noise_Accelerometer_Y_CAL,
             (float)s.Low_Noise_Accelerometer_Z_CAL);
-        Debug.Log("LN Acc X: " + accelerometer.x + "LN Acc Y: " + accelerometer.y + "LN Acc Z: " + accelerometer.z);
+        //Debug.Log("LN Acc X: " + accelerometer.x + "LN Acc Y: " + accelerometer.y + "LN Acc Z: " + accelerometer.z);
 
         gyroscope = new Vector3(
             (float)s.Gyroscope_Y_CAL,
