@@ -5,6 +5,10 @@ using UnlockType = Thalmic.Myo.UnlockType;
 using ShimmerRT.models;
 using UnityEngine.UI;
 using System.Collections.Generic;
+using UnityEditor;
+using System;
+using System.IO;
+using System.Text;
 
 // Orient the object to match that of the Myo armband.
 // Compensate for initial yaw (orientation about the gravity vector) and roll (orientation about
@@ -37,13 +41,14 @@ public class ShimmerJointOrientation : MonoBehaviour
     public Button btnSnapshot;
     //name value for accel + gyro from running rugby guy
     Dictionary<string, Vector3> snapshots = new Dictionary<string, Vector3>();
+    List<string> playback = new List<string>();
 
     void Start()
     {
         // get the script from the ShimmerDevice object
         shimmerFeed = shimmerDevice.GetComponent<ShimmerFeedManager>();
         ResetTransform();
-        btnSnapshot.onClick.AddListener(PrintSnaps);
+        btnSnapshot.onClick.AddListener(SaveFile);
     }
 
     private void Update()
@@ -64,7 +69,7 @@ public class ShimmerJointOrientation : MonoBehaviour
                 if (CheckMoving(s))
                 {
                     txtImpact.text = "--IsMoving--\n" + "LN Acc X: " + accelerometer.x + "\nLN Acc Y: " + accelerometer.y + "\nLN Acc Z: " + accelerometer.z;
-                    
+
                 }
             }
             UpdateTransform(s);
@@ -119,30 +124,110 @@ public class ShimmerJointOrientation : MonoBehaviour
         {
             Vector3 accel = new Vector3(dX, dY, dZ);
             Vector3 gyro = new Vector3((float)s.Gyroscope_X_CAL, (float)s.Gyroscope_Y_CAL, (float)s.Gyroscope_Z_CAL);
-            IsMoving(accel, gyro);
+            IsMoving(s);
             return true;
         }
-     
+
 
         return false;
     }
 
     //Add snapshots of model accel and rotation to list
-    private void IsMoving(Vector3 accel, Vector3 gyro)
+    private void IsMoving(Shimmer3DModel s)
     {
-        //add string key then value
-        snapshots.Add("Ac: " + Time.time, accel);
-        snapshots.Add("Gy: " + Time.time, gyro);
+        ////add string key then value
+        //snapshots.Add("Ac: " + Time.time, accel);
+        //snapshots.Add("Gy: " + Time.time, gyro);
+         playback.Add(BuildRowFromModel(s));
     }
 
-    private void PrintSnaps()
+    #region == BuildRows ==
+    public static string BuildRowFromModel(Shimmer3DModel s)
     {
-        Debug.Log("Snapshot Dict Size: "+snapshots.Count);
-        foreach (KeyValuePair<string, Vector3> kvp in snapshots)
+        StringBuilder sb = new StringBuilder();
+        
+        sb.Append(s.Timestamp_RAW);
+        sb.Append("," + s.Timestamp_CAL);
+
+        sb.Append("," + s.Low_Noise_Accelerometer_X_RAW);
+        sb.Append("," + s.Low_Noise_Accelerometer_X_CAL);
+        sb.Append("," + s.Low_Noise_Accelerometer_Y_RAW);
+        sb.Append("," + s.Low_Noise_Accelerometer_Y_CAL);
+        sb.Append("," + s.Low_Noise_Accelerometer_Z_RAW);
+        sb.Append("," + s.Low_Noise_Accelerometer_Z_CAL);
+
+        sb.Append("," + s.Wide_Range_Accelerometer_X_RAW);
+        sb.Append("," + s.Wide_Range_Accelerometer_X_CAL);
+        sb.Append("," + s.Wide_Range_Accelerometer_Y_RAW);
+        sb.Append("," + s.Wide_Range_Accelerometer_Y_CAL);
+        sb.Append("," + s.Wide_Range_Accelerometer_Z_RAW);
+        sb.Append("," + s.Wide_Range_Accelerometer_Z_CAL);
+
+        sb.Append("," + s.Gyroscope_X_RAW);
+        sb.Append("," + s.Gyroscope_X_CAL);
+        sb.Append("," + s.Gyroscope_Y_RAW);
+        sb.Append("," + s.Gyroscope_Y_CAL);
+        sb.Append("," + s.Gyroscope_Z_RAW);
+        sb.Append("," + s.Gyroscope_Z_CAL);
+
+        sb.Append("," + s.Magnetometer_X_RAW);
+        sb.Append("," + s.Magnetometer_X_CAL);
+        sb.Append("," + s.Magnetometer_Y_RAW);
+        sb.Append("," + s.Magnetometer_Y_CAL);
+        sb.Append("," + s.Magnetometer_Z_RAW);
+        sb.Append("," + s.Magnetometer_Z_CAL);
+
+
+        sb.Append("," + s.Pressure_RAW);
+        sb.Append("," + s.Pressure_CAL);
+        sb.Append("," + s.Temperature_RAW);
+        sb.Append("," + s.Temperature_CAL);
+
+        sb.Append("," + s.Axis_Angle_A_CAL);
+        sb.Append("," + s.Axis_Angle_X_CAL);
+        sb.Append("," + s.Axis_Angle_Y_CAL);
+        sb.Append("," + s.Axis_Angle_Z_CAL);
+
+        sb.Append("," + s.Quaternion_0_CAL);
+        sb.Append("," + s.Quaternion_1_CAL);
+        sb.Append("," + s.Quaternion_2_CAL);
+        sb.Append("," + s.Quaternion_3_CAL);
+
+        return sb.ToString();
+    
+    }
+    #endregion
+    #endregion
+
+    #region == Save to File ==
+    private void SaveFile()
+    {
+
+        if (playback == null)
         {
-            Debug.Log(string.Format("PrintSnap: Key = {0}, Value = {1}", kvp.Key, kvp.Value));
+            EditorUtility.DisplayDialog(
+                "Select File",
+                "Select Location first!",
+                "Ok");
+            return;
         }
 
+        var path = EditorUtility.SaveFilePanel(
+            "Save File",
+            "",
+            "TestSave" + " " + DateTime.Now.ToString("dd-MM-yyyy HH-mm-ss") + ".csv",
+            "csv");
+
+        if (path.Length != 0)
+        {
+                        
+            if (playback != null)
+            {
+                //File.WriteAllBytes(path, pngData);
+                File.WriteAllLines(path, playback.ToArray());
+                Debug.Log("File Saved as: " + path);
+            }
+        }
     }
     #endregion
 
