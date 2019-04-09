@@ -9,6 +9,7 @@ using UnityEditor;
 using System;
 using System.IO;
 using System.Text;
+using System.Linq;
 
 // Orient the object to match that of the Myo armband.
 // Compensate for initial yaw (orientation about the gravity vector) and roll (orientation about
@@ -42,6 +43,7 @@ public class ShimmerJointOrientation : MonoBehaviour
     //name value for accel + gyro from running rugby guy
     Dictionary<string, Vector3> snapshots = new Dictionary<string, Vector3>();
     List<string> playback = new List<string>();
+    List<Shimmer3DModel> loadFile = new List<Shimmer3DModel>();
 
     void Start()
     {
@@ -110,15 +112,10 @@ public class ShimmerJointOrientation : MonoBehaviour
     #region == Movement Snapshots ==
     private bool CheckMoving(Shimmer3DModel s)
     {
-
+        //if movement in any direction is above a set threshold, capture data and add to list
         float dX = Mathf.Abs((float)(lastShimmerModel.Low_Noise_Accelerometer_X_CAL - s.Low_Noise_Accelerometer_X_CAL));
         float dY = Mathf.Abs((float)(lastShimmerModel.Low_Noise_Accelerometer_Y_CAL - s.Low_Noise_Accelerometer_Y_CAL));
         float dZ = Mathf.Abs((float)(lastShimmerModel.Low_Noise_Accelerometer_Z_CAL - s.Low_Noise_Accelerometer_Z_CAL));
-
-        //if ((x != nx && abs(x - nx) > threshold) || (y != ny && abs(y - ny) > threshold) || (z != nz && abs(z - nz) > threshold))
-        //{
-        //    onAwake(x, y, z);
-        //}
 
         if (dX > isMovingThreshold || dY > isMovingThreshold || dZ > isMovingThreshold)
         {
@@ -127,7 +124,6 @@ public class ShimmerJointOrientation : MonoBehaviour
             IsMoving(s);
             return true;
         }
-
 
         return false;
     }
@@ -229,6 +225,65 @@ public class ShimmerJointOrientation : MonoBehaviour
             }
         }
     }
+    
+    public static Shimmer3DModel FromCsv(string csvLine)
+    {
+        string[] values = csvLine.Split(',');
+        Shimmer3DModel loadedModel = new Shimmer3DModel(
+            Convert.ToDouble(values[0]), 
+            Convert.ToDouble(values[1]), 
+            Convert.ToDouble(values[2]), 
+            Convert.ToDouble(values[3]),
+            Convert.ToDouble(values[4]),
+            Convert.ToDouble(values[5]),
+            Convert.ToDouble(values[6]),
+            Convert.ToDouble(values[7]),
+            Convert.ToDouble(values[8]), 
+            Convert.ToDouble(values[9]),
+            Convert.ToDouble(values[10]),
+            Convert.ToDouble(values[11]),
+            Convert.ToDouble(values[12]),
+            Convert.ToDouble(values[13]),
+            Convert.ToDouble(values[14]),
+            Convert.ToDouble(values[15]),
+            Convert.ToDouble(values[16]),
+            Convert.ToDouble(values[17]),
+            Convert.ToDouble(values[18]),
+            Convert.ToDouble(values[19]),
+            Convert.ToDouble(values[20]),
+            Convert.ToDouble(values[21]),
+            Convert.ToDouble(values[22]),
+            Convert.ToDouble(values[23]),
+            Convert.ToDouble(values[24]),
+            Convert.ToDouble(values[25]),
+            Convert.ToDouble(values[26]),
+            Convert.ToDouble(values[27]),
+            Convert.ToDouble(values[28]),
+            Convert.ToDouble(values[29]),
+            Convert.ToDouble(values[30]),
+            Convert.ToDouble(values[31]),
+            Convert.ToDouble(values[32]),
+            Convert.ToDouble(values[33]),
+            Convert.ToDouble(values[34]),
+            Convert.ToDouble(values[35]),
+            Convert.ToDouble(values[36]),
+            Convert.ToDouble(values[37]));
+       
+        return loadedModel;
+    }
+    //build list from file path.. posibly better to load direct from file w/streams?
+    private void ReadFile(string path)
+    {
+        /*
+        The File.ReadAllLines reads all lines from the CSV file into a string array.
+        The .Select(v => FromCsv(v)) uses Linq to build new shimmer model instead of for each
+         */
+        loadFile = File.ReadAllLines(path).Select(row => FromCsv(row))
+                                           .ToList();
+    }
+
+    
+
     #endregion
 
     void ResetTransform()
