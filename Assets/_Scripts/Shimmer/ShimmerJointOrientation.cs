@@ -10,6 +10,7 @@ using System;
 using System.IO;
 using System.Text;
 using System.Linq;
+using Assets._Scripts;
 
 // Orient the object to match that of the Myo armband.
 // Compensate for initial yaw (orientation about the gravity vector) and roll (orientation about
@@ -41,8 +42,8 @@ public class ShimmerJointOrientation : MonoBehaviour
     public float isMovingThreshold = 1.0f;
     public Button btnSnapshot;
     //name value for accel + gyro from running rugby guy
-    Dictionary<string, Vector3> snapshots = new Dictionary<string, Vector3>();
-    List<string> playback = new List<string>();
+    //Dictionary<string, Vector3> snapshots = new Dictionary<string, Vector3>();
+    List<Shimmer3DModel> playback = new List<Shimmer3DModel>();
     List<Shimmer3DModel> loadFile = new List<Shimmer3DModel>();
 
     void Start()
@@ -59,6 +60,7 @@ public class ShimmerJointOrientation : MonoBehaviour
         if (shimmerFeed.Queue.Count > 0)
         {
             var s = shimmerFeed.Queue.Dequeue();
+            playback.Add(s);
             // see if there was an 'impact' between this data and the last received data
             if (lastShimmerModel != null)
             {
@@ -134,7 +136,7 @@ public class ShimmerJointOrientation : MonoBehaviour
         ////add string key then value
         //snapshots.Add("Ac: " + Time.time, accel);
         //snapshots.Add("Gy: " + Time.time, gyro);
-         playback.Add(BuildRowFromModel(s));
+         //playback.Add(BuildRowFromModel(s));
     }
 
     #region == BuildRows ==
@@ -142,7 +144,7 @@ public class ShimmerJointOrientation : MonoBehaviour
     {
         StringBuilder sb = new StringBuilder();
         
-        sb.Append(s.Timestamp_RAW);
+        sb.Append(s.Timestamp_RAW); // convert this to a readable date
         sb.Append("," + s.Timestamp_CAL);
 
         sb.Append("," + s.Low_Noise_Accelerometer_X_RAW);
@@ -198,32 +200,7 @@ public class ShimmerJointOrientation : MonoBehaviour
     #region == Save to File ==
     private void SaveFile()
     {
-
-        if (playback == null)
-        {
-            EditorUtility.DisplayDialog(
-                "Select File",
-                "Select Location first!",
-                "Ok");
-            return;
-        }
-
-        var path = EditorUtility.SaveFilePanel(
-            "Save File",
-            "",
-            "TestSave" + " " + DateTime.Now.ToString("dd-MM-yyyy HH-mm-ss") + ".csv",
-            "csv");
-
-        if (path.Length != 0)
-        {
-                        
-            if (playback != null)
-            {
-                //File.WriteAllBytes(path, pngData);
-                File.WriteAllLines(path, playback.ToArray());
-                Debug.Log("File Saved as: " + path);
-            }
-        }
+        FileHandler.SaveModelToFile("KKK", playback);
     }
     
     public static Shimmer3DModel FromCsv(string csvLine)
@@ -272,16 +249,19 @@ public class ShimmerJointOrientation : MonoBehaviour
         return loadedModel;
     }
     //build list from file path.. posibly better to load direct from file w/streams?
-    private void ReadFile(string path)
+    private static List<Shimmer3DModel> ReadFile(string path)  
     {
-        /*
+        /*  
         The File.ReadAllLines reads all lines from the CSV file into a string array.
         The .Select(v => FromCsv(v)) uses Linq to build new shimmer model instead of for each
          */
-        loadFile = File.ReadAllLines(path).Select(row => FromCsv(row))
+       var  loadFile = File.ReadAllLines(path).Select(row => FromCsv(row))
                                            .ToList();
+
+        return loadFile;
     }
 
+    
     
 
     #endregion
